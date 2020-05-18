@@ -101,7 +101,7 @@ class SquaredL2DistanceNode(object):
 
     def backward(self):
         d_a = self.d_out * 2 * self.a_minus_b
-        d_b = -self.d_out * 2 * self.a_minus_b
+        d_b = self.d_out * 2 * self.a_minus_b
         self.a.d_out += d_a
         self.b.d_out += d_b
         return self.d_out
