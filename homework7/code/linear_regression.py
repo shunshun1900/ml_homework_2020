@@ -73,11 +73,15 @@ class LinearRegression(BaseEstimator, RegressorMixin):
 
 def main():
     lasso_data_fname ="c:/Users/jack/ml_homework_2020/homework7/code/lasso_data.pickle"
+    #lasso_data_fname = "/Users/shunshun/github/ml_homework_2020/homework7/code/lasso_data.pickle"
+    #lasso_data_fname = "lasso_data.pickle"
     x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = setup_problem.load_problem(lasso_data_fname)
 
     # Generate features
     X_train = featurize(x_train)
     X_val = featurize(x_val)
+
+    #print(X_train.shape, y_train.shape)
 
     # Let's plot prediction functions and compare coefficients for several fits
     # and the target function.
