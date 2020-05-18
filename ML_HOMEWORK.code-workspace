@@ -7,5 +7,7 @@
 			"path": "..\\my_workspace_cmcc"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"python.pythonPath": "C:\\Program Files\\Python\\Python37\\python.exe"
+	}
 }
