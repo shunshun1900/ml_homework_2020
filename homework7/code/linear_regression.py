@@ -72,7 +72,7 @@ class LinearRegression(BaseEstimator, RegressorMixin):
 
 
 def main():
-    lasso_data_fname = "lasso_data.pickle"
+    lasso_data_fname ="c:/Users/jack/ml_homework_2020/homework7/code/lasso_data.pickle"
     x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = setup_problem.load_problem(lasso_data_fname)
 
     # Generate features
@@ -87,11 +87,11 @@ def main():
     pred_fns.append({"name": "Target Parameter Values (i.e. Bayes Optimal)", "coefs": coefs_true, "preds": target_fn(x)})
 
     X = featurize(x)
-    estimator = LinearRegression(step_size=0.001, max_num_epochs=1000)
+    estimator = LinearRegression(step_size=0.001, max_num_epochs=100)
     estimator.fit(X_train, y_train)
     name = "Linear regression"
     pred_fns.append({"name":name, "preds": estimator.predict(X) })
-    plot_prediction_functions(x, pred_fns, x_train, y_train, legend_loc="best")
+    plot_utils.plot_prediction_functions(x, pred_fns, x_train, y_train, legend_loc="best")
 
 if __name__ == '__main__':
   main()

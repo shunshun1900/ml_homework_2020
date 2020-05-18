@@ -136,6 +136,26 @@ class SumNode(object):
         node_name: node's name (a string)
         """
         ## TODO
+        self.a = a
+        self.b = b
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
+
+    def forward(self):
+        self.out = self.a.out + self.b.out
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
+    
+    def backward(self):
+        d_a = self.d_out*1
+        d_b = self.d_out*1
+        self.a.d_out += d_a
+        self.b.d_out += d_b
+        return self.d_out
+    
+    def get_predecessors(self):
+        return [self.a, self.b]
 
 class AffineNode(object):
     """Node implementing affine transformation (W,x,b)-->Wx+b, where W is a matrix,
@@ -146,6 +166,22 @@ class AffineNode(object):
         b: node for which b.out is a numpy array of shape (m) (i.e. vector of length m)
     """
     ## TODO
+    def __init__(self, w, x, b, node_name):
+        self.w = w
+        self.x = x
+        self.b = b
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
+
+    def forward(self):
+        self.out = np.dot(self.w.out, self.x.out)
+        self.d_out = np.zeros(self.out.shape)
+
+    def backward(self):
+        d_x = np.dot(self.d_out, self.w.out)
+        d_b = self.d_out*1
+        #d_w = 
 
 class TanhNode(object):
     """Node tanh(a), where tanh is applied elementwise to the array a
