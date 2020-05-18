@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "..\\my_workspace_cmcc"
 		}
 	],
 	"settings": {}
