@@ -125,6 +125,19 @@ class L2NormPenaltyNode(object):
         self.w = w
         
         ## TODO
+    def forward(self):
+        self.out = self.l2_reg*np.dot(self.w.out, self.w.out)
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
+        
+    def backward(self):
+        d_w = self.d_out*2*self.l2_reg*self.w.out
+        self.w.d_out += d_w
+        return  self.d_out
+        
+    def get_predecessors(self):
+        return [self.w]
+
 
 class SumNode(object):
     """ Node computing a + b, for numpy arrays a and b"""

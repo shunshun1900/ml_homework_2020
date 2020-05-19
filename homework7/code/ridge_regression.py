@@ -19,7 +19,17 @@ class RidgeRegression(BaseEstimator, RegressorMixin):
         self.prediction = nodes.VectorScalarAffineNode(x=self.x, w=self.w, b=self.b,
                                                  node_name="prediction")
         # TODO
+        self.l2_reg = l2_reg
+        self.square_loss = nodes.SquaredL2DistanceNode(a=self.prediction, b=self.y,
+                                               node_name="square loss")
+        self.l2_norm_penalty = nodes.L2NormPenaltyNode(self.l2_reg, self.w, node_name="L2 Norm Penalty")
+        self.objective = nodes.SumNode(self.square_loss, self.l2_norm_penalty, node_name="objective")
+        # Group nodes into types to construct computation graph function
+        self.inputs = [self.x]
+        self.outcomes = [self.y]
+        self.parameters = [self.w, self.b]
 
+        self.graph = graph.ComputationGraphFunction(self.inputs, self.outcomes, self.parameters, self.prediction, self.objective)
 
     def fit(self, X, y):
         num_instances, num_ftrs = X.shape
@@ -61,7 +71,9 @@ class RidgeRegression(BaseEstimator, RegressorMixin):
 
 
 def main():
-    lasso_data_fname = "lasso_data.pickle"
+    #lasso_data_fname = "lasso_data.pickle"
+    lasso_data_fname ="c:/Users/jack/ml_homework_2020/homework7/code/lasso_data.pickle"
+    #lasso_data_fname = "/Users/shunshun/github/ml_homework_2020/homework7/code/lasso_data.pickle"
     x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = setup_problem.load_problem(lasso_data_fname)
 
     # Generate features
@@ -73,7 +85,7 @@ def main():
     X = featurize(x)
 
     l2reg = 1
-    estimator = RidgeRegression(l2_reg=l2reg, step_size=0.00005, max_num_epochs=2000)
+    estimator = RidgeRegression(l2_reg=l2reg, step_size=0.00005, max_num_epochs=500)
     estimator.fit(X_train, y_train)
     name = "Ridge with L2Reg="+str(l2reg)
     pred_fns.append({"name":name, "preds": estimator.predict(X) })
