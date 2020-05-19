@@ -198,4 +198,5 @@ class TanhNode(object):
         a: node for which a.out is a numpy array
     """
     ## TODO
+    ## test branch
 
