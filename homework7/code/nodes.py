@@ -175,13 +175,22 @@ class AffineNode(object):
         self.d_out = None
 
     def forward(self):
-        self.out = np.dot(self.w.out, self.x.out)
+        self.out = np.dot(self.w.out, self.x.out) + self.b
         self.d_out = np.zeros(self.out.shape)
 
+        return self.out
+
     def backward(self):
-        d_x = np.dot(self.d_out, self.w.out)
+        d_x = np.dot(self.w.out.T, self.d_out)
         d_b = self.d_out*1
-        #d_w = 
+        d_w = np.outer(self.d_out, self.x)
+
+        self.x.d_out += d_x
+        self.b.d_out += d_b
+        self.w.d_out += d_w
+        return self.d_out
+    def get_predecessors(self):
+        return [self.w, self.x, self.b]
 
 class TanhNode(object):
     """Node tanh(a), where tanh is applied elementwise to the array a
