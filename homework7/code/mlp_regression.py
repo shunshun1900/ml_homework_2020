@@ -21,6 +21,16 @@ class MLPRegression(BaseEstimator, RegressorMixin):
         self.x = nodes.ValueNode(node_name="x") # to hold a vector input
         self.y = nodes.ValueNode(node_name="y") # to hold a scalar response
         ## TODO
+        self.w1 = nodes.ValueNode(node_name="w1") # to hold a matrix parameter w1 for the hidden layer
+        self.w2 = nodes.ValueNode(node_name="w2") # to hold a vector parameter input w2 for prediction
+        self.b1 = nodes.ValueNode(node_name="b1") # to hold a vector bias input for the hidden layer
+        self.b2 = nodes.ValueNode(node_name="b2") # to hold a scalar bias for prediction
+        self.affine = nodes.AffineNode(self.w1, self.x, self.b1, node_name="affine") # to hold a affine transform
+        self.active = nodes.TanhNode(self.affine, node_name="active") # to hold a activation function node using tanh
+        self.prediction = nodes.VectorScalarAffineNode(self.w2, self.x, self.b2, node_name="predict") # to hold a prediction node
+        self.objective = nodes.SquaredL2DistanceNode(self.predict, self.y, node_name="objective") # to hold a square_loss node
+
+        
 
     def fit(self, X, y):
         num_instances, num_ftrs = X.shape

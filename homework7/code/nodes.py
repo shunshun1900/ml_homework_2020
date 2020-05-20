@@ -211,4 +211,22 @@ class TanhNode(object):
         a: node for which a.out is a numpy array
     """
     ## TODO
+    def __init__(self, a, node_name):
+        self.a = a 
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
+
+    def forward(self):
+        self.out = np.tanh(self.a.out)
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
+
+    def backward(self):
+        d_a = 1-self.out**2
+        self.a.d_out += d_a
+        return self.d_out
+    def get_predecessors(self):
+        return [self.a]
+
 
