@@ -1,12 +1,7 @@
 import numpy as np
 
 y = np.array([[1,2,3],[2,2,2]])
-print(y[1])
-print(y.reshape(-1).shape)
-a = [1,2]
-b = [3,4]
-print(a+b)
+x = np.array([2,2])
 
-d = {}
-d["test"]=a
-print(d)
+print(np.dot(y.T,x))
+
