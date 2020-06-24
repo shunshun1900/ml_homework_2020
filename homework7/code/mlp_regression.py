@@ -10,7 +10,7 @@ import plot_utils
 
 
 class MLPRegression(BaseEstimator, RegressorMixin):
-    """ MLP regression with computation graph """
+    """ MLP(Multilayer Perceptron) regression with computation graph """
     def __init__(self, num_hidden_units=10, step_size=.005, init_param_scale=0.01, max_num_epochs = 5000):
         self.num_hidden_units = num_hidden_units
         self.init_param_scale = 0.01

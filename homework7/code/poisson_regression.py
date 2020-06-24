@@ -5,10 +5,14 @@ import numpy as np
 import nodes
 import graph
 import plot_utils
+from sklearn.datasets import make_blobs
 
-class LinearRegression(BaseEstimator, RegressorMixin):
-    """ Linear regression with computation graph """
-    def __init__(self, step_size=.005,  max_num_epochs = 5000):
+
+
+
+class PoissonRegression(BaseEstimator, RegressorMixin):
+    ''' Poisson regression with computation graph   '''
+    def __init__(self, step_size=0.0005, max_num_epochs= 500):
         self.max_num_epochs = max_num_epochs
         self.step_size = step_size
 
@@ -17,11 +21,12 @@ class LinearRegression(BaseEstimator, RegressorMixin):
         self.y = nodes.ValueNode(node_name="y") # to hold a scalar response
         self.w = nodes.ValueNode(node_name="w") # to hold the parameter vector
         self.b = nodes.ValueNode(node_name="b") # to hold the bias parameter (scalar)
-        self.prediction = nodes.VectorScalarAffineNode(x=self.x, w=self.w, b=self.b,
-                                                 node_name="prediction")
-        self.objective = nodes.SquaredL2DistanceNode(a=self.prediction, b=self.y,
-                                               node_name="square loss")
 
+        self.affine = nodes.VectorScalarAffineNode(self.w, self.x, self.b, node_name="affine") # to hold a affine transform
+        #self.active = nodes.ExpNode(self.affine, node_name="active") # to hold a activation function node using exp
+        self.prediction = nodes.ExpNode(self.affine, node_name="predict") # to hold a prediction node
+        self.objective = nodes.PoissonLikehoodNode(self.prediction, self.y, 
+                                                    node_name="objective") # to hold a negative log likehood node
         # Group nodes into types to construct computation graph function
         self.inputs = [self.x]
         self.outcomes = [self.y]
@@ -31,12 +36,19 @@ class LinearRegression(BaseEstimator, RegressorMixin):
                                                           self.parameters, self.prediction,
                                                           self.objective)
 
+
     def fit(self, X, y):
         num_instances, num_ftrs = X.shape
         y = y.reshape(-1)
 
-        init_parameter_values = {"w": np.zeros(num_ftrs), "b": np.array(0.0)}
-        self.graph.set_parameters(init_parameter_values)
+        ## TODO: Initialize parameters (small random numbers -- not all 0, to break symmetry )
+        #s = self.init_param_scale
+        #init_values = None 
+        # ## TODO
+
+        init_values = {"w": np.zeros(num_ftrs), "b": np.array(0.0)}
+
+        self.graph.set_parameters(init_values)
 
         for epoch in range(self.max_num_epochs):
             shuffle = np.random.permutation(num_instances)
@@ -55,49 +67,58 @@ class LinearRegression(BaseEstimator, RegressorMixin):
 
             if epoch % 5 == 0:
                 print("Epoch ",epoch,": average objective value=",epoch_obj_tot/num_instances)
+    
+    def Poisson(self, lamda, k):
+        ''' computing Poisson value
+            parameters: 
+            lamda: Poisson parameter
+            k: class 
+        '''
+        pro = lamda**k/np.math.factorial(k)*np.exp(-lamda)
+        return pro
 
-    def predict(self, X, y=None):
+
+
+    def predict(self,X, y=None):
         try:
             getattr(self, "graph")
         except AttributeError:
             raise RuntimeError("You must train classifer before predicting data!")
 
         num_instances = X.shape[0]
+        k_space = range(3)
         preds = np.zeros(num_instances)
+        probabilities = np.zeros((num_instances, len(k_space)))
         for j in range(num_instances):
             preds[j] = self.graph.get_prediction(input_values={"x":X[j]})
+            for k in range(len(k_space)):
+                probabilities[j][k] = self.Poisson(preds[j], k)
 
-        return preds
-
-
+        
+        return preds, probabilities
 
 def main():
-    lasso_data_fname ="c:/Users/jack/ml_homework_2020/homework7/code/lasso_data.pickle"
-    #lasso_data_fname = "/Users/shunshun/github/ml_homework_2020/homework7/code/lasso_data.pickle"
-    #lasso_data_fname = "lasso_data.pickle"
-    x_train, y_train, x_val, y_val, target_fn, coefs_true, featurize = setup_problem.load_problem(lasso_data_fname)
+    # Create the  training data
+    np.random.seed(2)
+    X, y = make_blobs(n_samples=300,cluster_std=.25, centers=np.array([(-3,1),(0,2),(3,1)]))
+    #plt.scatter(X[:, 0], X[:, 1], c=y, s=50)
+    #plt.show()
 
-    # Generate features
-    X_train = featurize(x_train)
-    X_val = featurize(x_val)
+    print(X.shape, y.shape)
+    print(X[1],y[1])
 
-    print(y_train[1])
+    estimator = PoissonRegression(step_size=0.005, max_num_epochs=500)
+    estimator.fit(X, y)
+    lamda, probability = estimator.predict(X) 
 
-    print(X_train.shape, y_train.shape)
+    print(y,lamda,probability)
 
-    # Let's plot prediction functions and compare coefficients for several fits
-    # and the target function.
-    pred_fns = []
-    x = np.sort(np.concatenate([np.arange(0,1,.001), x_train]))
-
-    pred_fns.append({"name": "Target Parameter Values (i.e. Bayes Optimal)", "coefs": coefs_true, "preds": target_fn(x)})
-
-    X = featurize(x)
-    estimator = LinearRegression(step_size=0.001, max_num_epochs=100)
-    estimator.fit(X_train, y_train)
-    name = "Linear regression"
-    pred_fns.append({"name":name, "preds": estimator.predict(X) })
-    plot_utils.plot_prediction_functions(x, pred_fns, x_train, y_train, legend_loc="best")
-
+    '''
+    plt.figure()
+    line = plt.plot(range(5))[0]                # plot函数返回的是一个列表,因为可以同时画多条线的哦;
+    line.set_color('r')
+    line.set_linewidth(2.0)
+    plt.show()
+    '''
 if __name__ == '__main__':
-  main()
+    main()

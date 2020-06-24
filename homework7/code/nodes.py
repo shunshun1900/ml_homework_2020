@@ -188,7 +188,7 @@ class AffineNode(object):
         self.d_out = None
 
     def forward(self):
-        self.out = np.dot(self.w.out, self.x.out) + self.b
+        self.out = np.dot(self.w.out, self.x.out) + self.b.out
         self.d_out = np.zeros(self.out.shape)
 
         return self.out
@@ -196,7 +196,7 @@ class AffineNode(object):
     def backward(self):
         d_x = np.dot(self.w.out.T, self.d_out)
         d_b = self.d_out*1
-        d_w = np.outer(self.d_out, self.x)
+        d_w = np.outer(self.d_out, self.x.out)
 
         self.x.d_out += d_x
         self.b.d_out += d_b
@@ -229,4 +229,55 @@ class TanhNode(object):
     def get_predecessors(self):
         return [self.a]
 
+class ExpNode(object):
+    ''' Node ExpNode(a), where exp is applied to elementwise to the array of a
+        parameters: 
+        a: node for which a.out is a numpy array
 
+    '''
+    def __init__(self, a, node_name):
+        self.a = a 
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
+
+    def forward(self):
+        self.out = np.exp(self.a.out)
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
+
+    def backward(self):
+        d_a = self.out
+        self.a.d_out += d_a
+        return self.d_out
+
+    def get_predecessors(self):
+        return [self.a]
+
+class PoissonLikehoodNode(object):
+    ''' Node computing negative log-likehood for Poisson, where a is lamda, a numpy array
+        b is y, a numpy array
+        parameters:
+        a: lamda 
+        b: y
+    '''
+    def __init__(self, a, b, node_name):
+        self.a = a 
+        self.b = b 
+        self.node_name = node_name
+        self.out = None
+        self.d_out = None
+
+    def forward(self):
+        self.out = -(self.b.out*np.log(self.a.out) - self.a.out - np.log(np.math.factorial(self.b.out)))
+        self.d_out = np.zeros(self.out.shape)
+        return self.out
+
+    def backward(self):
+        d_a = -(self.b.out / self.a.out - 1)
+        self.a.d_out += d_a
+        return self.d_out
+
+    def get_predecessors(self):
+
+        return [self.a, self.b]
