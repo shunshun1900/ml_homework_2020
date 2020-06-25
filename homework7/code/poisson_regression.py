@@ -12,9 +12,10 @@ from sklearn.datasets import make_blobs
 
 class PoissonRegression(BaseEstimator, RegressorMixin):
     ''' Poisson regression with computation graph   '''
-    def __init__(self, step_size=0.0005, max_num_epochs= 500):
+    def __init__(self, step_size=0.0005, max_num_epochs= 500, init_param_scale=0.01):
         self.max_num_epochs = max_num_epochs
         self.step_size = step_size
+        self.init_param_scale = init_param_scale
 
         # Build computation graph
         self.x = nodes.ValueNode(node_name="x") # to hold a vector input
@@ -42,11 +43,12 @@ class PoissonRegression(BaseEstimator, RegressorMixin):
         y = y.reshape(-1)
 
         ## TODO: Initialize parameters (small random numbers -- not all 0, to break symmetry )
-        #s = self.init_param_scale
+        s = self.init_param_scale
         #init_values = None 
         # ## TODO
 
-        init_values = {"w": np.zeros(num_ftrs), "b": np.array(0.0)}
+        #init_values = {"w": np.zeros(num_ftrs), "b": np.array(0.0)}
+        init_values = {"w": np.random.randn(num_ftrs), "b": np.random.randn(1)}
 
         self.graph.set_parameters(init_values)
 
@@ -100,17 +102,17 @@ class PoissonRegression(BaseEstimator, RegressorMixin):
 def main():
     # Create the  training data
     np.random.seed(2)
-    X, y = make_blobs(n_samples=300,cluster_std=.25, centers=np.array([(-3,1),(0,2),(3,1)]))
-    #plt.scatter(X[:, 0], X[:, 1], c=y, s=50)
-    #plt.show()
+    X, y = make_blobs(n_samples=300,cluster_std=.25, centers=np.array([(3,5),(7,1),(10,8)]))
+    plt.scatter(X[:, 0], X[:, 1], c=y, s=50)
+    plt.show()
 
     print(X.shape, y.shape)
     print(X[1],y[1])
 
-    estimator = PoissonRegression(step_size=0.005, max_num_epochs=500)
+    estimator = PoissonRegression(step_size=0.005, max_num_epochs=100)
     estimator.fit(X, y)
     lamda, probability = estimator.predict(X) 
-
+    print(estimator.w.out, estimator.b.out)
     print(y,lamda,probability)
 
     '''
