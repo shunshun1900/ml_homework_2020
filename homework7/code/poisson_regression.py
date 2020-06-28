@@ -6,9 +6,11 @@ import nodes
 import graph
 import plot_utils
 from sklearn.datasets import make_blobs
-
-
-
+import pandas as pd
+import os
+import patsy 
+from patsy import dmatrices
+import statsmodels.api as sm
 
 class PoissonRegression(BaseEstimator, RegressorMixin):
     ''' Poisson regression with computation graph   '''
@@ -88,7 +90,7 @@ class PoissonRegression(BaseEstimator, RegressorMixin):
             raise RuntimeError("You must train classifer before predicting data!")
 
         num_instances = X.shape[0]
-        k_space = range(3)
+        k_space = range(4000)
         preds = np.zeros(num_instances)
         probabilities = np.zeros((num_instances, len(k_space)))
         for j in range(num_instances):
@@ -100,6 +102,7 @@ class PoissonRegression(BaseEstimator, RegressorMixin):
         return preds, probabilities
 
 def main():
+    '''
     # Create the  training data
     np.random.seed(2)
     X, y = make_blobs(n_samples=300,cluster_std=.25, centers=np.array([(3,5),(7,1),(10,8)]))
@@ -108,12 +111,45 @@ def main():
 
     print(X.shape, y.shape)
     print(X[1],y[1])
+    ''' 
+    #Create a pandas DataFrame for the counts data set.
+    cur_dir = os.path.split(os.path.realpath(__file__))[0]
+    file_name = "%s\\nyc_bb_bicyclist_counts.csv"%(cur_dir)
+    print(file_name)
+    df = pd.read_csv(file_name, header=0, infer_datetime_format=True, parse_dates=[0], index_col=[0])
+
+    #Add a few derived regression variables.
+    ds = df.index.to_series()
+    df['MONTH'] = ds.dt.month
+    df['DAY_OF_WEEK'] = ds.dt.dayofweek
+    df['DAY'] = ds.dt.day
+
+    #Create the training and testing data sets.
+    mask = np.random.rand(len(df)) < 0.8
+    df_train = df[mask]
+    df_test = df[~mask]
+    print('Training data set length='+str(len(df_train)))
+    print('Testing data set length='+str(len(df_test)))
+
+    #Setup the regression expression in patsy notation. We are telling patsy that BB_COUNT is our dependent variable and
+    # it depends on the regression variables: DAY, DAY_OF_WEEK, MONTH, HIGH_T, LOW_T and PRECIP.
+    expr = """BB_COUNT ~ DAY  + DAY_OF_WEEK + MONTH + HIGH_T + LOW_T + PRECIP"""
+
+    #Set up the X and y matrices
+    y_train, X_train = dmatrices(expr, df_train, return_type='dataframe')
+    y_test, X_test = dmatrices(expr, df_test, return_type='dataframe')
+
+    print(type(y_train),type(X_train))
+    X = np.array(X_train)
+    y = np.array(y_train)
+    print(type(y),type(X))
 
     estimator = PoissonRegression(step_size=0.005, max_num_epochs=100)
     estimator.fit(X, y)
     lamda, probability = estimator.predict(X) 
-    print(estimator.w.out, estimator.b.out)
-    print(y,lamda,probability)
+    #print(estimator.w.out, estimator.b.out)
+    #print(y,lamda,probability)
+    print(np.argmax(probability,1))
 
     '''
     plt.figure()

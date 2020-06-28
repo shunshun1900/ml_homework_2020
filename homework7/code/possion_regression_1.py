@@ -3,10 +3,13 @@ from patsy import dmatrices
 import numpy as np
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
-
+import os
 
 #Create a pandas DataFrame for the counts data set.
-df = pd.read_csv('nyc_bb_bicyclist_counts.csv', header=0, infer_datetime_format=True, parse_dates=[0], index_col=[0])
+cur_dir = os.path.split(os.path.realpath(__file__))[0]
+file_name = "%s\\nyc_bb_bicyclist_counts.csv"%(cur_dir)
+print(file_name)
+df = pd.read_csv(file_name, header=0, infer_datetime_format=True, parse_dates=[0], index_col=[0])
 
 #Add a few derived regression variables.
 ds = df.index.to_series()
@@ -29,6 +32,10 @@ expr = """BB_COUNT ~ DAY  + DAY_OF_WEEK + MONTH + HIGH_T + LOW_T + PRECIP"""
 y_train, X_train = dmatrices(expr, df_train, return_type='dataframe')
 y_test, X_test = dmatrices(expr, df_test, return_type='dataframe')
 
+print(type(y_train),type(X_train))
+X = np.array(X_train)
+y = np.array(y_train)
+print(type(y),type(X))
 #Using the statsmodels GLM class, train the Poisson regression model on the training data set.
 poisson_training_results = sm.GLM(y_train, X_train, family=sm.families.Poisson()).fit()
 

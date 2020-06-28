@@ -1,6 +1,12 @@
 import numpy as np
+import os
 
-y = np.array([[1,2,3],[2,2,2]])
+d = os.getcwd()
+print(d)
+y = np.array([[1,2,3],[2,6,4]])
+print(np.argmax(y,1))
+out = -(264*np.log(.000001) - .000001 - np.log(np.math.factorial(264)))
+
 x = np.array([2,3])
 z = np.zeros((2,3))
 r = np.random.rand(2)
